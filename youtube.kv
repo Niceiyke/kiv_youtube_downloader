@@ -1,0 +1,139 @@
+<MyRoot>:
+    video_title: video_title 
+    video_size: video_size
+    video_duration: video_duration
+    url_input: url_input
+    resolution_spinner: resolution_spinner
+    progress_container: progress_container
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: 40
+        spacing: 20
+        size: root.width, root.height
+        pos_hint: {"x": 0.8, "y": 0.5}
+        
+        canvas.before:
+            Color:
+                rgba: 0.02, 0.05, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        
+        Label:
+            id: main
+            text: "YouTube Downloader"
+            font_size: 24
+            color: 0.92, 0.45, 0
+            size_hint_y: None
+            height: 40
+        
+            canvas.before:
+                Color:
+                    rgba: 0.01, 0.2, 0.1, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+        
+        TextInput:
+            id: url_input
+            text: ""
+            hint_text: "Enter YouTube URL"
+            font_size: 24
+            multiline: False
+            size_hint_y: None
+            height: 80
+            text_size: self.width, None
+            valign: 'top'
+            on_text_validate: root.handle_text_validate(self)
+        
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: 40
+
+            CheckBox:
+                id: playlist_checkbox
+                size_hint_x: None
+                width: 40
+                on_active: root.on_checkbox_active(self, self.active)
+
+            Label:
+                text: "Download playlist"
+                font_size: 16
+                valign: 'middle'
+                size_hint_x: None
+                width: 160
+
+        BoxLayout:
+            orientation: "vertical"
+            spacing: 10
+
+            BoxLayout:
+                orientation: "horizontal"
+
+                Label:
+                    text: "Video Title:"
+                    font_size: 12
+
+                Label:
+                    id: video_title
+                    text: "-"
+                    font_size: 12
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                    text_size: self.width, None
+                    valign: 'top'
+
+            BoxLayout:
+                orientation: "horizontal"
+                spacing: 5
+
+                Label:
+                    text: "Video Duration:"
+                    font_size: 12
+                    
+                Label:
+                    id: video_duration
+                    text: "-"
+                    font_size: 12
+
+            BoxLayout:
+                orientation: "horizontal"
+         
+                Label:
+                    text: "Video Resolution"
+                    font_size: 12
+                
+                Spinner:
+                    id: resolution_spinner
+                    text: "Select Resolution"
+                    values: ["Select Resolution"]
+                    on_text: root.update_video_info(self.text)
+
+            BoxLayout:
+                orientation: "horizontal"
+                spacing: 5
+
+                Label:
+                    text: "Video Size:"
+                    font_size: 12
+                    
+                Label:
+                    id: video_size
+                    text: "-"
+                    font_size: 12
+
+        ScrollView:
+            id: progress_container
+            BoxLayout:
+                id: progress_box
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+
+        Button:
+            text: "Download"
+            size_hint_y: None
+            height: 40
+            on_press: root.download_video_async()
