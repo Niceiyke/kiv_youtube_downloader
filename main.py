@@ -3,13 +3,20 @@ from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.progressbar import ProgressBar
+from kivy.uix.textinput import TextInput
+from kivy.uix.checkbox import CheckBox
+from kivy.uix.spinner import Spinner
+from kivy.uix.button import Button
+from kivy.uix.scrollview import ScrollView
+from kivy.uix.popup import Popup
 from kivy.properties import ObjectProperty, BooleanProperty
 from kivy.clock import Clock, mainthread
-from youtube_operations import YouTubeOperations
-from downloader import Downloader
+from kivy.uix.gridlayout import GridLayout
+import threading
 import os
 from functools import partial
-import threading
+from youtube_operations import YouTubeOperations
+from downloader import Downloader
 
 class MyRoot(Widget):
     video_title = ObjectProperty(None)
@@ -19,7 +26,7 @@ class MyRoot(Widget):
     resolution_spinner = ObjectProperty(None)
     progress_box = ObjectProperty(None)
     loading = BooleanProperty(False)
-    
+
     download_count = 0
     download_playlist = False
     audio_only = False
@@ -35,6 +42,8 @@ class MyRoot(Widget):
         self.audio_only = value
 
     def video_info(self, url):
+        # Schedule the creation of loading indicator popup within the main Kivy thread
+        Clock.schedule_once(lambda dt: self.show_loading_popup(), 0)
         try:
             if self.download_playlist:
                 info_list = YouTubeOperations.get_playlist_info(url)
@@ -44,7 +53,10 @@ class MyRoot(Widget):
                 self.set_video_info(info)
         except Exception as e:
             print(e)
-            Clock.schedule_once(lambda dt, e=e: setattr(self.ids.video_title, 'text', str(e)))
+            Clock.schedule_once(lambda dt, e=e: self.show_error_popup(str(e)))
+
+        # Close loading indicator popup within the main Kivy thread
+        Clock.schedule_once(lambda dt: self.dismiss_loading_popup(), 0)
 
     def download_video_async(self):
         url = self.ids.url_input.text
@@ -54,8 +66,6 @@ class MyRoot(Widget):
         else:
             self.download_count += 1
             download_id = f"download_{self.download_count}"
-            
-            # Schedule the creation of UI elements for progress tracking on the main thread
             Clock.schedule_once(partial(self.create_progress_ui, url, resolution))
 
     def create_progress_ui(self, url, resolution, dt):
@@ -66,7 +76,6 @@ class MyRoot(Widget):
         progress_layout.add_widget(progress_bar)
         self.ids.progress_box.add_widget(progress_layout)
 
-        # Start download in a new thread
         if self.audio_only:
             threading.Thread(target=self._download_audio, args=(url, progress_bar, progress_label)).start()
         else:
@@ -96,7 +105,7 @@ class MyRoot(Widget):
                 self.download_count += 1
                 Clock.schedule_once(partial(self.create_progress_ui_for_video, video_info, resolution))
         except Exception as e:
-            Clock.schedule_once(lambda dt, e=e: setattr(self.ids.video_title, 'text', str(e)))
+            Clock.schedule_once(lambda dt, e=e: self.show_error_popup(str(e)))
 
     def progress_callback(self, progress_bar, progress_label, stream, chunk, bytes_remaining):
         total_size = stream.filesize
@@ -166,6 +175,28 @@ class MyRoot(Widget):
     def handle_text_validate(self, instance):
         url = instance.text
         threading.Thread(target=self.video_info, args=(url,)).start()
+
+    def show_error_popup(self, message):
+        from kivy.uix.popup import Popup
+        from kivy.uix.boxlayout import BoxLayout
+        from kivy.uix.button import Button
+
+        layout = BoxLayout(orientation='vertical')
+        message_label = Label(text=message)
+        layout.add_widget(message_label)
+        close_button = Button(text="Close", size_hint=(1, 0.2))
+        layout.add_widget(close_button)
+        popup = Popup(title='Error', content=layout, size_hint=(0.8, 0.3))
+        close_button.bind(on_release=popup.dismiss)
+        popup.open()
+
+    def show_loading_popup(self):
+        self.loading_popup = Popup(title='Loading', content=Spinner(), size_hint=(None, None), size=(100, 100))
+        self.loading_popup.open()
+
+    def dismiss_loading_popup(self):
+        if self.loading_popup:
+            self.loading_popup.dismiss()
 
 class YoutubeApp(App):
     def on_text_validate(self, instance):

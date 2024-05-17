@@ -11,7 +11,7 @@
         padding: 40
         spacing: 20
         size: root.width, root.height
-        pos_hint: {"x": 0.8, "y": 0.5}
+        pos_hint: {"center_x": 0.5, "center_y": 0.5}
         
         canvas.before:
             Color:
@@ -19,140 +19,144 @@
             Rectangle:
                 pos: self.pos
                 size: self.size
-        
+
         Label:
             id: main
             text: "YouTube Downloader"
             font_size: 24
             color: 0.92, 0.45, 0
-            size_hint_y: None
+            size_hint_y:            None
             height: 40
-        
             canvas.before:
                 Color:
                     rgba: 0.01, 0.2, 0.1, 1
                 Rectangle:
                     pos: self.pos
                     size: self.size
-        
-        TextInput:
-            id: url_input
-            text: ""
-            hint_text: "Enter YouTube URL"
-            font_size: 24
-            multiline: False
-            size_hint_y: None
-            height: 80
-            text_size: self.width, None
-            valign: 'top'
-            on_text_validate: root.handle_text_validate(self)
 
         BoxLayout:
             orientation: "horizontal"
             size_hint_y: None
-            height: 20
+            height: 80
+            padding: [10, 0]
 
             Label:
-                text: "Audio Only"
+                text: "Enter YouTube URL:"
                 font_size: 16
-                valign: 'middle'
                 size_hint_x: None
-                width: 160
+                width: 180
+                halign: 'left'
+
+            TextInput:
+                id: url_input
+                text: ""
+                hint_text: "Enter YouTube URL"
+                font_size: 16
+                multiline: False
+                size_hint_x: 0.7
+                padding: [10, (self.height - self.line_height) / 2]
+                on_text_validate: root.handle_text_validate(self)
+
+
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: 40
+            padding: [10, 0]
+
+            Label:
+                text: "Audio Only:"
+                font_size: 16
+                size_hint_x: None
+                width: 180
+                halign: 'left'
 
             CheckBox:
                 id: audio_only_checkbox
-                size_hint_x: None
-                width: 40
+                size_hint_x: 0.1
+                active: False
                 on_active: root.on_audio_only_checkbox_active(self, self.active)
 
-            
-
-        
         BoxLayout:
             orientation: "horizontal"
             size_hint_y: None
             height: 40
+            padding: [10, 0]
 
             Label:
-                text: "Download playlist"
+                text: "Download Playlist:"
                 font_size: 16
-                valign: 'middle'
                 size_hint_x: None
-                width: 160
+                width: 180
+                halign: 'left'
 
             CheckBox:
                 id: playlist_checkbox
-                size_hint_x: None
-                width: 40
+                size_hint_x: 0.1
+                active: False
                 on_active: root.on_checkbox_active(self, self.active)
 
-            
-
-        BoxLayout:
-            orientation: "horizontal"
+        GridLayout:
+            cols: 2
             size_hint_y: None
-            height: 40
+            height: 130
+            padding: [10, 0]
+
             Label:
                 text: "Video Title:"
-                font_size: 12
+                font_size: 16
                 size_hint_x: None
-
-                
-
+                width: 180
+                halign: 'left'
 
             Label:
                 id: video_title
                 text: "-"
-                font_size: 12
-                text_size: self.width, None
-                valign: 'top'
-
-
-            
-
-        BoxLayout:
-            orientation: "horizontal"
-            spacing: 5
+                font_size: 16
+                halign: 'left'
+                text_size: self.width, None  # Allow text wrapping
+                size_hint_y: None  # Ensure the label's height adjusts based on content
+                height: self.texture_size[1]  # Adjust height based on wrapped text
+                
 
             Label:
                 text: "Video Duration:"
-                font_size: 12
+                font_size: 16
                 size_hint_x: None
-                
+                width: 180
+                halign: 'left'
+
             Label:
                 id: video_duration
                 text: "-"
-                font_size: 12
+                font_size: 16
+                halign: 'left'
 
-        BoxLayout:
-            orientation: "horizontal"
-        
             Label:
-                text: "Video Resolution"
-                font_size: 12
+                text: "Video Resolution:"
+                font_size: 16
                 size_hint_x: None
-            
+                width: 180
+                halign: 'left'
+
             Spinner:
                 id: resolution_spinner
                 text: "Select Resolution"
                 values: ["Select Resolution"]
                 on_text: root.update_video_info(self.text)
 
-        BoxLayout:
-            orientation: "horizontal"
-            spacing: 5
-
             Label:
                 text: "Video Size:"
-                font_size: 12
+                font_size: 16
                 size_hint_x: None
-                
+                width: 180
+                halign: 'left'
+
             Label:
                 id: video_size
                 text: "-"
-                font_size: 12
-                
-
+                font_size: 16
+                halign: 'left'
 
         ScrollView:
             id: progress_container
@@ -167,3 +171,4 @@
             size_hint_y: None
             height: 40
             on_press: root.download_video_async()
+
