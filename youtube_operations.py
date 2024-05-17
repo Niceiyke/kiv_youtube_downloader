@@ -1,4 +1,8 @@
+#youtube_operations.py
+
 from pytube import YouTube, Playlist, exceptions
+
+import traceback
 
 class YouTubeOperations:
     @staticmethod
@@ -16,13 +20,25 @@ class YouTubeOperations:
             }
         except exceptions.RegexMatchError:
             raise ValueError("Invalid URL")
+        except exceptions.VideoUnavailable:
+            raise ValueError("Video is unavailable")
+        except exceptions.LiveStreamError:
+            raise ValueError("Cannot download live streams")
+        except exceptions.VideoPrivate:
+            raise ValueError("Video is private")
+        except exceptions.MembersOnly:
+            raise ValueError("Video is members-only")
+        except exceptions.AgeRestrictedError:
+            raise ValueError("Video is age-restricted")
         except Exception as e:
-            raise ValueError(f"Error occurred: {e}")
+            traceback.print_exc()
+            raise ValueError(f"Error occurred in get_video_info: {e}")
 
     @staticmethod
     def get_playlist_info(url):
         try:
             playlist = Playlist(url)
+            
             videos_info = []
             for video in playlist.videos:
                 video_streams = video.streams.filter(only_video=True)
@@ -37,5 +53,10 @@ class YouTubeOperations:
             return videos_info
         except exceptions.RegexMatchError:
             raise ValueError("Invalid Playlist URL")
+        except exceptions.VideoUnavailable:
+            raise ValueError("One or more videos in the playlist are unavailable")
+        except KeyError:
+            raise ValueError("Invalid Playlist URL")
         except Exception as e:
-            raise ValueError(f"Error occurred: {e}")
+            traceback.print_exc()
+            raise ValueError(f"Error occurred in get_playlist_info: {e}")

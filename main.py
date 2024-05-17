@@ -11,7 +11,6 @@ import os
 from functools import partial
 import threading
 
-
 class MyRoot(Widget):
     video_title = ObjectProperty(None)
     video_size = ObjectProperty(None)
@@ -20,13 +19,20 @@ class MyRoot(Widget):
     resolution_spinner = ObjectProperty(None)
     progress_box = ObjectProperty(None)
     loading = BooleanProperty(False)
-
+    
     download_count = 0
     download_playlist = False
+    audio_only = False
 
     def __init__(self, **kwargs):
         super(MyRoot, self).__init__(**kwargs)
         self.download_folder = os.path.join(os.path.expanduser('~'), 'Downloads')
+
+    def on_checkbox_active(self, checkbox, value):
+        self.download_playlist = value
+
+    def on_audio_only_checkbox_active(self, checkbox, value):
+        self.audio_only = value
 
     def video_info(self, url):
         try:
@@ -36,8 +42,9 @@ class MyRoot(Widget):
             else:
                 info = YouTubeOperations.get_video_info(url)
                 self.set_video_info(info)
-        except ValueError as e:
-            Clock.schedule_once(lambda dt: setattr(self.ids.video_title, 'text', str(e)))
+        except Exception as e:
+            print(e)
+            Clock.schedule_once(lambda dt, e=e: setattr(self.ids.video_title, 'text', str(e)))
 
     def download_video_async(self):
         url = self.ids.url_input.text
@@ -47,46 +54,49 @@ class MyRoot(Widget):
         else:
             self.download_count += 1
             download_id = f"download_{self.download_count}"
-
+            
             # Schedule the creation of UI elements for progress tracking on the main thread
             Clock.schedule_once(partial(self.create_progress_ui, url, resolution))
 
     def create_progress_ui(self, url, resolution, dt):
         progress_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=40)
-        progress_label = Label(text=f"Downloading: {url} ({resolution})", font_size=12)
+        progress_label = Label(text="Downloading", font_size=12)
         progress_bar = ProgressBar(max=100, value=0)
         progress_layout.add_widget(progress_label)
         progress_layout.add_widget(progress_bar)
         self.ids.progress_box.add_widget(progress_layout)
 
         # Start download in a new thread
-        threading.Thread(target=self._download_video, args=(url, resolution, progress_bar, progress_label)).start()
+        if self.audio_only:
+            threading.Thread(target=self._download_audio, args=(url, progress_bar, progress_label)).start()
+        else:
+            threading.Thread(target=self._download_video, args=(url, resolution, progress_bar, progress_label)).start()
 
     def _download_video(self, url, resolution, progress_bar, progress_label):
         try:
             Downloader.download_video(url, resolution, self.download_folder, partial(self.progress_callback, progress_bar, progress_label))
             Clock.schedule_once(lambda dt: self.update_progress_label(progress_label, "Download completed"))
         except ValueError as e:
-            Clock.schedule_once(lambda dt: self.update_progress_label(progress_label, str(e)))
+            error_message = str(e)
+            Clock.schedule_once(lambda dt: self.update_progress_label(progress_label, error_message))
+
+    def _download_audio(self, url, progress_bar, progress_label):
+        try:
+            Downloader.download_audio(url, self.download_folder, partial(self.progress_callback, progress_bar, progress_label))
+            Clock.schedule_once(lambda dt: self.update_progress_label(progress_label, "Download completed"))
+        except ValueError as e:
+            error_message = str(e)
+            Clock.schedule_once(lambda dt: self.update_progress_label(progress_label, error_message))
 
     def _download_playlist(self, url, resolution):
         try:
             videos_info = YouTubeOperations.get_playlist_info(url)
+            print(videos_info)
             for video_info in videos_info:
                 self.download_count += 1
                 Clock.schedule_once(partial(self.create_progress_ui_for_video, video_info, resolution))
-        except ValueError as e:
-            Clock.schedule_once(lambda dt: setattr(self.ids.video_title, 'text', str(e)))
-
-    def create_progress_ui_for_video(self, video_info, resolution, dt):
-        progress_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=40)
-        progress_label = Label(text=f"Downloading: {video_info['title']} ({resolution})", font_size=12)
-        progress_bar = ProgressBar(max=100, value=0)
-        progress_layout.add_widget(progress_label)
-        progress_layout.add_widget(progress_bar)
-        self.ids.progress_box.add_widget(progress_layout)
-
-        threading.Thread(target=self._download_video, args=(video_info['url'], resolution, progress_bar, progress_label)).start()
+        except Exception as e:
+            Clock.schedule_once(lambda dt, e=e: setattr(self.ids.video_title, 'text', str(e)))
 
     def progress_callback(self, progress_bar, progress_label, stream, chunk, bytes_remaining):
         total_size = stream.filesize
@@ -157,7 +167,6 @@ class MyRoot(Widget):
         url = instance.text
         threading.Thread(target=self.video_info, args=(url,)).start()
 
-
 class YoutubeApp(App):
     def on_text_validate(self, instance):
         self.root.handle_text_validate(instance)
@@ -167,7 +176,6 @@ class YoutubeApp(App):
 
     def build(self):
         return MyRoot()
-
 
 if __name__ == "__main__":
     YoutubeApp().run()

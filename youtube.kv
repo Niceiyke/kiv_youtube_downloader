@@ -46,17 +46,32 @@
             text_size: self.width, None
             valign: 'top'
             on_text_validate: root.handle_text_validate(self)
+
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: 20
+
+            Label:
+                text: "Audio Only"
+                font_size: 16
+                valign: 'middle'
+                size_hint_x: None
+                width: 160
+
+            CheckBox:
+                id: audio_only_checkbox
+                size_hint_x: None
+                width: 40
+                on_active: root.on_audio_only_checkbox_active(self, self.active)
+
+            
+
         
         BoxLayout:
             orientation: "horizontal"
             size_hint_y: None
             height: 40
-
-            CheckBox:
-                id: playlist_checkbox
-                size_hint_x: None
-                width: 40
-                on_active: root.on_checkbox_active(self, self.active)
 
             Label:
                 text: "Download playlist"
@@ -65,64 +80,79 @@
                 size_hint_x: None
                 width: 160
 
+            CheckBox:
+                id: playlist_checkbox
+                size_hint_x: None
+                width: 40
+                on_active: root.on_checkbox_active(self, self.active)
+
+            
+
         BoxLayout:
-            orientation: "vertical"
-            spacing: 10
+            orientation: "horizontal"
+            size_hint_y: None
+            height: 40
+            Label:
+                text: "Video Title:"
+                font_size: 12
+                size_hint_x: None
 
-            BoxLayout:
-                orientation: "horizontal"
-
-                Label:
-                    text: "Video Title:"
-                    font_size: 12
-
-                Label:
-                    id: video_title
-                    text: "-"
-                    font_size: 12
-                    size_hint_y: None
-                    height: self.texture_size[1]
-                    text_size: self.width, None
-                    valign: 'top'
-
-            BoxLayout:
-                orientation: "horizontal"
-                spacing: 5
-
-                Label:
-                    text: "Video Duration:"
-                    font_size: 12
-                    
-                Label:
-                    id: video_duration
-                    text: "-"
-                    font_size: 12
-
-            BoxLayout:
-                orientation: "horizontal"
-         
-                Label:
-                    text: "Video Resolution"
-                    font_size: 12
                 
-                Spinner:
-                    id: resolution_spinner
-                    text: "Select Resolution"
-                    values: ["Select Resolution"]
-                    on_text: root.update_video_info(self.text)
 
-            BoxLayout:
-                orientation: "horizontal"
-                spacing: 5
 
-                Label:
-                    text: "Video Size:"
-                    font_size: 12
-                    
-                Label:
-                    id: video_size
-                    text: "-"
-                    font_size: 12
+            Label:
+                id: video_title
+                text: "-"
+                font_size: 12
+                text_size: self.width, None
+                valign: 'top'
+
+
+            
+
+        BoxLayout:
+            orientation: "horizontal"
+            spacing: 5
+
+            Label:
+                text: "Video Duration:"
+                font_size: 12
+                size_hint_x: None
+                
+            Label:
+                id: video_duration
+                text: "-"
+                font_size: 12
+
+        BoxLayout:
+            orientation: "horizontal"
+        
+            Label:
+                text: "Video Resolution"
+                font_size: 12
+                size_hint_x: None
+            
+            Spinner:
+                id: resolution_spinner
+                text: "Select Resolution"
+                values: ["Select Resolution"]
+                on_text: root.update_video_info(self.text)
+
+        BoxLayout:
+            orientation: "horizontal"
+            spacing: 5
+
+            Label:
+                text: "Video Size:"
+                font_size: 12
+                size_hint_x: None
+                
+            Label:
+                id: video_size
+                text: "-"
+                font_size: 12
+                
+
 
         ScrollView:
             id: progress_container
